@@ -1,42 +1,33 @@
 const fs = require('fs');
 const readline = require('readline');
+const path = require('path');
 
-// Create a writable stream to a text file
-const fileStream = fs.createWriteStream('./02-write-file/output.txt', { flags: 'a' });
+const fileStream = fs.createWriteStream(path.join(__dirname, 'output.txt'), { flags: 'a' });
 
-// Display a welcome message in the console
-console.log('Welcome! Enter text (type "ctrl + c" to terminate):');
-
-// Create readline interface for reading user input
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
 
-// Function to handle user input
+console.log('Welcome! Enter some text. Type "exit" to quit.');
+
 const handleInput = (input) => {
-  // Check for exit keyword
-  if (input.toLowerCase() === 'exit') {
-    // Display farewell message
-    console.log('Goodbye! Process terminated.');
-    // Close the stream and readline interface
-    fileStream.end();
-    rl.close();
+  if (input.trim().toLowerCase() === 'exit') {
+    closeApplication();
   } else {
-    // Write the entered text to the file
-    fileStream.write(`${input}\n`);
-    // Continue waiting for further input
-    rl.question('', handleInput);
+    fileStream.write(input + '\n', 'utf8');
   }
 };
 
-// Wait for user input, with subsequent checking for the presence of the keyword exit
-rl.question('', handleInput);
-
-// Implement a farewell message when the process is stopped
-process.on('SIGINT', () => {
-  console.log('\nReceived SIGINT (Ctrl+C). Goodbye! Process terminated.');
-  // Close the stream and readline interface
-  fileStream.end();
+const closeApplication = () => {
+  console.log('Goodbye!');
+  fileStream.close();
   rl.close();
+  process.exit();
+};
+
+rl.on('line', handleInput);
+
+rl.on('SIGINT', () => {
+  closeApplication();
 });
